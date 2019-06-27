@@ -26,7 +26,7 @@ def train():
     path_folder=input("Enter path of folder to read files(use slash '/'):")
     class_type=int(input("Enter type of file(Resume-1, Not Resume-0):"))
     if os.path.exists(path_folder):
-        allfilesDF=read_files(path_folder)
+        allfilesDF,flist=read_files(path_folder)
         cleanDF=clean_data(allfilesDF)
         mergedDF=merge_file(cleanDF,class_type)
         x_train=word_vector_train(mergedDF)
@@ -41,7 +41,7 @@ def pred():
     path_folder=input("Enter path of folder to read files(use slash '/'):")
     if os.path.exists(path_folder):
         #flist=os.listdir(path_folder)
-        allfilesDF=read_files(path_folder)
+        allfilesDF,flist=read_files(path_folder)
         cleanDF=clean_data(allfilesDF)
         x_test=word_vector_pred(cleanDF)
         save_array(x_test,0,0)
@@ -59,18 +59,18 @@ def pred():
         i=0
         for (ftype,pr) in zip(y_pred,prob32):
             if ftype==1:
-                #print(flist[i].split('.')[0]+':')
+                print(str(i+1)+"."+flist[i]+':')
                 print('Resume',end='\t')
                 print(pr[1]*100)
-                outL.append('Resume         '+str(pr[1]*100)) 
+                #outL.append('Resume         '+str(pr[1]*100)) 
             else:
-                #print(flist[i].split('.')[0]+':')
+                print(str(i+1)+"."+flist[i]+':')
                 print('Not Resume',end='\t')
                 print(pr[0]*100)
-                outL.append('Not Resume     '+str(pr[0]*100)) 
+                #outL.append('Not Resume     '+str(pr[0]*100)) 
             i+=1
-        output=pd.DataFrame(outL)
-        output.to_csv('output.csv',header=None, index=None, mode='a')
+        #output=pd.DataFrame(outL)
+        #output.to_csv('output.csv',header=None, index=None, mode='a')
         
         #else:
          #   print("File not exists.")
@@ -85,9 +85,11 @@ def read_files(path_folder):
 
     #reading files(.doc, .docx, .csv, .pdf)
     dfList=[]
+    filename=[]
     #word = win32.Dispatch("Word.Application")
     for file in filelist:
         try :
+            filename.append(file)
             extension = os.path.splitext(file)[1]
             '''if extension=='.csv':
                 print(file)
@@ -164,8 +166,9 @@ def read_files(path_folder):
             pass
             #print(file)
     #word.Quit()
-    main_path=input("Enter path to all model data(use '/'):")
-    indir=main_path
+    #main_path=input("Enter path to all model data(use '/'):")
+    #indir=main_path
+    indir='C:/Users/shadd/Rezide/imp'
     os.chdir(indir)
     allfilesDF=pd.DataFrame(dfList)
     allfilesDF.columns=['data']
@@ -175,7 +178,7 @@ def read_files(path_folder):
     allfilesDF.reset_index(drop=True,inplace=True)
     allfilesDF.to_csv('allfiles.csv',index=None)
     #print(allfilesDF)
-    return allfilesDF
+    return allfilesDF,filename
 
 def clean_data(allfilesDF):
     #print("In clean_data()")
