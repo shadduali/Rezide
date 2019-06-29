@@ -22,25 +22,22 @@ from sklearn.feature_extraction.text import CountVectorizer
 import pickle
 
 def train():
-    #print("In train()")
     path_folder=input("Enter path of folder to read files(use slash '/'):")
     class_type=int(input("Enter type of file(Resume-1, Not Resume-0):"))
     if os.path.exists(path_folder):
         allfilesDF,flist=read_files(path_folder)
         cleanDF=clean_data(allfilesDF)
-        mergedDF=merge_file(cleanDF,class_type)
+        cleanDF['class']=class_type
+        mergedDF=merge_file(cleanDF)
         x_train=word_vector_train(mergedDF)
         y_train=mergedDF.iloc[:, 1].values
-        #print(y_train)
         save_array(x_train,y_train,1)
     else:
         print("Directory not exists.")
 
 def pred():
-    #print("In pred()")
     path_folder=input("Enter path of folder to read files(use slash '/'):")
     if os.path.exists(path_folder):
-        #flist=os.listdir(path_folder)
         allfilesDF,flist=read_files(path_folder)
         cleanDF=clean_data(allfilesDF)
         x_test=word_vector_pred(cleanDF)
@@ -76,12 +73,44 @@ def pred():
          #   print("File not exists.")
     else:
         print("Directory/File not exists.")
-        
-def read_files(path_folder):
-    #print("In read_files()")
-    indir=path_folder
-    os.chdir(indir)
-    filelist=glob.glob("*")
+    fback=input('Do you want to give feedback(y/n)?')
+    if(fback=='y'):
+        auto_train(path_folder,flist)
+    
+def auto_train(path_folder,flist):
+    os.chdir(path_folder)
+    ch=input('Were there any file wrongly predicted as non resume(y/n)?')
+    if(ch=='y'):
+        res=input("File no(from above):")
+        res=re.split(',| |\n',res)
+        file=[]
+        for i in res:
+            file.append(filelist[int(i)])
+            allfilesDF,flist=read_files(file)
+            file1=clean_data(allfilesDF)
+            file1['class']=1
+    ch=input('Were there any file wrongly predicted as resume(y/n)?')
+    if(ch=='y'):
+        nres=input("File no(from above):")
+        nres=re.split(',| |\n',res)
+        file=[]
+        for i in nres:
+            file.append(filelist[int(i)])
+            allfilesDF,flist=read_files(file)
+            file2=clean_data(allfilesDF)
+            file2['class']=0
+    cleanDF=pd.concat([file1,file2])
+    mergedDF=merge_file(cleanDF)
+    x_train=word_vector_train(mergedDF)
+    y_train=mergedDF.iloc[:, 1].values
+    save_array(x_train,y_train,1)
+    
+def read_files(pathorfile):
+    if(type(pathorfiles)==str):
+        os.chdir(pathorfile)
+        filelist=glob.glob("*")
+    else:
+        filelist=pathorfile
 
     #reading files(.doc, .docx, .csv, .pdf)
     dfList=[]
@@ -104,8 +133,6 @@ def read_files(path_folder):
             if extension=='.doc' :
                 print(file)
                 text=textract.process(file).decode("utf-8") 
-                #file_remove=name[0]+'.doc'
-                #os.remove(file_remove)
                 text = text.replace('\n', ' ')
                 text=' '.join(text.split())
                 dfList.append(text)
@@ -136,11 +163,9 @@ def read_files(path_folder):
                 print(file)
                 xlsdf=pd.read_excel(file)
                 xlsdf['new'] = xlsdf.astype(str).values.sum(axis=1)
-                #xls=[]
                 xls=' '.join(xlsdf['new'].tolist())
                 xls=xls.replace('\n',' ')
                 xls=re.sub('\s+', ' ', xls).strip()
-                #print(xls)
                 dfList.append(xls)
             elif extension=='.ppt' :
                 print(file)
@@ -164,8 +189,6 @@ def read_files(path_folder):
                 continue
         except:
             pass
-            #print(file)
-    #word.Quit()
     #main_path=input("Enter path to all model data(use '/'):")
     #indir=main_path
     indir='C:/Users/shadd/Rezide/imp'
@@ -203,10 +226,10 @@ def clean_data(allfilesDF):
     #print(cleanDF)
     return cleanDF
 
-def merge_file(cleanDF,class_type):
+def merge_file(cleanDF):
     #print("In merge_file()")
     path_prevfile=input("Enter path of prev file(use '/'):")
-    cleanDF['class']=class_type
+    #cleanDF['class']=class_type
     if os.path.exists(path_prevfile):
         file1 = pd.read_csv(path_prevfile,encoding="ISO-8859-1")
         mergedDF = pd.concat([file1,cleanDF])
