@@ -71,42 +71,28 @@ def pred():
         
         #else:
          #   print("File not exists.")
+        cleanDF['class']=y_pred
+        fback=input('Do you want to give feedback(y/n)?')
+        if(fback=='y'):
+            auto_train(cleanDF)
     else:
         print("Directory/File not exists.")
-    fback=input('Do you want to give feedback(y/n)?')
-    if(fback=='y'):
-        auto_train(path_folder,flist)
-    
-def auto_train(path_folder,flist):
-    os.chdir(path_folder)
-    ch=input('Were there any file wrongly predicted as non resume(y/n)?')
-    if(ch=='y'):
-        res=input("File no(from above):")
-        res=re.split(',| |\n',res)
-        file=[]
-        for i in res:
-            file.append(filelist[int(i)])
-            allfilesDF,flist=read_files(file)
-            file1=clean_data(allfilesDF)
-            file1['class']=1
-    ch=input('Were there any file wrongly predicted as resume(y/n)?')
-    if(ch=='y'):
-        nres=input("File no(from above):")
-        nres=re.split(',| |\n',res)
-        file=[]
-        for i in nres:
-            file.append(filelist[int(i)])
-            allfilesDF,flist=read_files(file)
-            file2=clean_data(allfilesDF)
-            file2['class']=0
-    cleanDF=pd.concat([file1,file2])
+        
+
+def auto_train(cleanDF):
+    ch=input('Were all files correctly predicted(y/n?')
+    if ch=='n':
+        wr_pr=input('Files which were wrongly predicted(serial no from above):')
+        wr_pr=[int(wr_pr)-1 for wr_pr in (re.split(',| |\n',wr_pr))]
+        for i in wr_pr:
+            cleanDF.iloc[i,1]=1-cleanDF.iloc[i,1]
     mergedDF=merge_file(cleanDF)
     x_train=word_vector_train(mergedDF)
     y_train=mergedDF.iloc[:, 1].values
     save_array(x_train,y_train,1)
     
 def read_files(pathorfile):
-    if(type(pathorfiles)==str):
+    if(type(pathorfile)==str):
         os.chdir(pathorfile)
         filelist=glob.glob("*")
     else:
@@ -118,7 +104,6 @@ def read_files(pathorfile):
     #word = win32.Dispatch("Word.Application")
     for file in filelist:
         try :
-            filename.append(file)
             extension = os.path.splitext(file)[1]
             '''if extension=='.csv':
                 print(file)
@@ -131,6 +116,7 @@ def read_files(pathorfile):
                 text=re.sub('\s+', ' ', text).strip()
                 dfList.append(text)'''
             if extension=='.doc' :
+                filename.append(file)
                 print(file)
                 text=textract.process(file).decode("utf-8") 
                 text = text.replace('\n', ' ')
@@ -138,12 +124,14 @@ def read_files(pathorfile):
                 dfList.append(text)
                 word.Quit()
             elif extension=='.docx' :
+                filename.append(file)
                 print(file)
                 text = docx2txt.process(file)
                 text = text.replace('\n', ' ')
                 text=re.sub('\s+', ' ', text).strip()
                 dfList.append(text)
             elif extension=='.pdf' :
+                filename.append(file)
                 print(file)
                 pdfFileObj = open(file, 'rb') 
                 pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
@@ -154,12 +142,14 @@ def read_files(pathorfile):
                 dfList.append(text)
                 pdfFileObj.close()
             elif extension=='.txt' :
+                filename.append(file)
                 print(file)
                 text = open(file,'r').read()
                 text = text.replace('\n', ' ')
                 text=re.sub('\s+', ' ', text).strip()
                 dfList.append(text)
             elif extension=='.xlsx' :
+                filename.append(file)
                 print(file)
                 xlsdf=pd.read_excel(file)
                 xlsdf['new'] = xlsdf.astype(str).values.sum(axis=1)
@@ -168,6 +158,7 @@ def read_files(pathorfile):
                 xls=re.sub('\s+', ' ', xls).strip()
                 dfList.append(xls)
             elif extension=='.ppt' :
+                filename.append(file)
                 print(file)
                 prs = Presentation(file)
                 text_runs = []
@@ -231,7 +222,7 @@ def merge_file(cleanDF):
     path_prevfile=input("Enter path of prev file(use '/'):")
     #cleanDF['class']=class_type
     if os.path.exists(path_prevfile):
-        file1 = pd.read_csv(path_prevfile,encoding="ISO-8859-1")
+        file1 = pd.read_csv(os.path.join(path_prevfile,'mergedlem.csv'),encoding="ISO-8859-1")
         mergedDF = pd.concat([file1,cleanDF])
         mergedDF.to_csv("mergedlem.csv",index=None)
     else:
@@ -245,8 +236,8 @@ def word_vector_train(DF):
     listvec=[]
     listvec=DF['data'].tolist()
     pickle_in = open("vocab.pickle","rb")
-    vocab = pickle.load(pickle_in)
-    cv = CountVectorizer(max_features = 1500,vocabulary=vocab)
+    #vocab = pickle.load(pickle_in)
+    cv = CountVectorizer(max_features = 1500)
     x= cv.fit_transform(listvec).toarray()
     vocab=cv.vocabulary_
     pickle_out = open("vocab.pickle","wb")
