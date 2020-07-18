@@ -3,7 +3,7 @@ import numpy as np
 import re
 import os
 import glob
-import textract
+#import textract
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -182,7 +182,7 @@ def read_files(pathorfile):
             pass
     #main_path=input("Enter path to all model data(use '/'):")
     #indir=main_path
-    indir='C:/Users/shadd/Rezide/imp'
+    indir='C:/Users/Faiz Ali2/Rezide/imp'
     os.chdir(indir)
     allfilesDF=pd.DataFrame(dfList)
     allfilesDF.columns=['data']
