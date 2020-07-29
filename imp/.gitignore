@@ -1,0 +1,8 @@
+allfiles.csv
+cleanfile.csv
+mergedlem.csv
+mergedstem.csv
+output.csv
+x_train.npy
+y_train.npy
+x_test.npy
