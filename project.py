@@ -151,7 +151,6 @@ def read_files(pathorfile):
     allfilesDF.replace('', np.nan, inplace=True)
     allfilesDF.dropna(inplace=True)
     allfilesDF.reset_index(drop=True, inplace=True)
-    allfilesDF.to_csv('allfiles.csv', index=None)
     return allfilesDF, filename
 
 
@@ -172,16 +171,14 @@ def clean_data(allfilesDF):
     cleanDF['data'].replace('', np.nan, inplace=True)
     cleanDF.dropna(inplace=True)
     cleanDF.reset_index(drop=True, inplace=True)
-    cleanDF.to_csv("cleanfile.csv", index=None)
     return cleanDF
 
 
 def merge_file(cleanDF):
     prev_file=input("Is there any previous file(y/n)?")
     if prev_file=='y' or prev_file=='Y':
-        path_prevfile = input("Enter path of prev file(use '/'):")
-        if os.path.exists(path_prevfile):
-            file1 = pd.read_csv(os.path.join(path_prevfile, 'mergedlem.csv'), encoding="ISO-8859-1")
+        if os.path.exists('mergedlem.csv'):
+            file1 = pd.read_csv('mergedlem.csv'), encoding="ISO-8859-1")
             mergedDF = pd.concat([file1, cleanDF])
             mergedDF.to_csv("mergedlem.csv", index=None)
             return mergedDF
@@ -208,27 +205,11 @@ def train_model(DF):
 
 
 def word_vector_pred(DF):
-
     listvec = DF['data'].tolist()
     vocab = pickle.load(open("vocab.pickle", "rb"))
     cv = CountVectorizer(vocabulary=vocab)
     x = cv.transform(listvec).toarray()
     return x
-
-
-def save_array(x, y, train_or_pred):
-    # saving array
-    if train_or_pred:
-        np.save('x_train', x)
-        np.save('y_train', y)
-    else:
-        np.save('x_test', x)
-
-
-def load():
-    x = np.load(os.path.join("x_train.npy"))
-    y = np.load(os.path.join("y_train.npy"))
-    return x, y
 
 
 def main():
